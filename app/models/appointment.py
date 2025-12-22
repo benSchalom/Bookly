@@ -63,6 +63,11 @@ class Appointment(db.Model):
             'prix_total': float(self.prix_total) if self.prix_total else None,
             'adresse_domicile': self.adresse_domicile,
             'distance_km': float(self.distance_km) if self.distance_km else None,
+            'cancelled_by': self.cancelled_by,
+            'cancelled_at': self.cancelled_at.isoformat() if self.cancelled_at else None,
+            'cancellation_reason': self.cancellation_reason,
+            'is_late_cancellation': self.is_late_cancellation,
+            'notes_client': self.notes_client,
             'notes_client': self.notes_client,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None

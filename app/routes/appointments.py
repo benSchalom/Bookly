@@ -15,7 +15,7 @@ appointments_bp = Blueprint('rendez-vous', __name__)
 #===============================
 # Créer un rendez vous
 #===============================
-@appointments_bp .route('/api/pros/appointments', methods=['POST'])
+@appointments_bp .route('/api/appointments', methods=['POST'])
 @jwt_required()
 def creer_rdv():
 
@@ -125,3 +125,126 @@ def creer_rdv():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
  
+
+#===============================
+# Consulter tous les rendez vous
+#===============================
+@appointments_bp.route('/api/appointments', methods=['GET'])  
+@jwt_required()
+def lister_rdv():
+    # recuperaion de l'identifiant de l'utilisateur connecte
+    current_user_id = get_jwt_identity()
+    user =User.query.get(int(current_user_id))
+    
+    if not user:
+        return jsonify({'error': 'Compte innexistant'}), 401
+    
+    if user.role == 'client':
+        appointments = Appointment.query.filter_by(client_id = user.id).order_by(Appointment.date.desc(), Appointment.heure_debut.desc()).all()
+    elif user.role == 'pro':
+        if not user.pro:
+            return jsonify({'error': 'Vous ne pouvez pas avoir accès a cette information'}), 404
+        
+        appointments = Appointment.query.filter_by(pro_id=user.pro.id).order_by(Appointment.date.desc(), Appointment.heure_debut.desc()).all()
+
+    # Conversion du resulat en liste 
+    rdv_list = [rdv.to_dict() for rdv in appointments]
+
+    return jsonify({'appointments': rdv_list}), 200
+
+#===============================
+# Consulter un rendez vous
+#===============================
+@appointments_bp.route('/api/appointments/<int:appointment_id>', methods=['GET'])
+@jwt_required()
+def details_rdv(appointment_id):
+
+    # recuperaion de l'identifiant de l'utilisateur connecte
+    current_user_id = get_jwt_identity()
+    user =User.query.get(int(current_user_id))
+
+    # recuperer le rendez vous dont on veut les informations
+    appointment = Appointment.query.get(int(appointment_id))
+
+    if not appointment:
+        return jsonify({'error': 'Desolé, mais aucune information concernant ce rendez vous n\'a été trouvé'}), 404
+    
+    # verification des droits d'acces aux informations du rendez vous
+    if user.role == 'client' and appointment.client_id != user.id:
+        return jsonify({'error': 'Accès non autorisé'}), 403
+
+    if user.role == 'pro':
+        if not user.pro or appointment.pro_id != user.pro.id:
+            return jsonify({'error': 'Accès non autorisé'}), 403
+    
+    return jsonify(appointment.to_dict()), 200 
+
+
+#===============================
+# Mettre a jour un rendez vous
+#===============================
+@appointments_bp.route('/api/appointments/<int:appointment_id>', methods=['PUT'])
+@jwt_required()
+def modifier_rdv(appointment_id):
+    # recuperaion de l'identifiant de l'utilisateur connecte
+    current_user_id = get_jwt_identity()
+    user =User.query.get(int(current_user_id))
+
+    # recuperer le rendez vous dont on veut les informations
+    appointment = Appointment.query.get(int(appointment_id))
+
+    if not appointment:
+        return jsonify({'error': 'Desolé, mais aucune information concernant ce rendez vous n\'a été trouvé'}), 404
+    
+    # verification des droits d'acces aux informations du rendez vous
+    if user.role == 'client' and appointment.client_id != user.id:
+        return jsonify({'error': 'Accès non autorisé'}), 403
+
+    if user.role == 'pro':
+        if not user.pro or appointment.pro_id != user.pro.id:
+            return jsonify({'error': 'Accès non autorisé'}), 403
+    
+    # Recuperer les nouvelles donnees a partir du formulaire
+    data = request.get_json()
+    nouveau_statut = data['statut']
+
+    # Dans le cadre de la modification, un client peut juste faire une annulation 
+    if user.role == 'client':
+        if nouveau_statut != 'Annuler':
+            return jsonify({'error': 'Vous ne pouvez pas effectué cette opération'}), 403
+    
+    if user.role == 'pro':
+        # declarattion des differentes transition de statut valide
+        transitions_valides = {
+            'En attente': ['Confirmer', 'Annuler'], # un rdv en attente peut passer a confirmer ou annuler
+            'Confirmer': ['Terminer', 'Annuler'], # un rdv confimer peut passer a terminer ou annuler
+            'Terminer': [],  # un rdv terminer ne subira plus de changement
+            'Annuler': []   # un rdv annuler ne subira plus de transitions
+        }
+    
+    if nouveau_statut not in transitions_valides[appointment.statut]:
+        return jsonify({'error': 'Changement de statut invalide'}), 400
+    
+    # en cas d'annulation de rendez vous
+    if nouveau_statut == 'Annuler':
+        appointment.cancelled_by = user.id
+        appointment.cancelled_at = datetime.now(timezone.utc)
+        appointment.cancellation_reason = data.get('raison')
+
+    # Vérifier si il s'agit d'une annulation tardive non conforme au reglement
+    now = datetime.now(timezone.utc)
+    rdv_datetime = datetime.combine(appointment.date, appointment.heure_debut, tzinfo=timezone.utc)   
+
+    if rdv_datetime - now < timedelta(hours=24):
+        appointment.is_late_cancellation = True
+    
+    appointment.statut = nouveau_statut
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Rendez vous modifié avec succès',
+        'Rendez vous': appointment.to_dict()
+    }), 200
+
+
