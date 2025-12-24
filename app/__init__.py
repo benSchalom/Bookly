@@ -36,6 +36,8 @@ def create_app(config_name='development'):
     app.register_blueprint(time_blocks_bp)
     from app.routes.appointments import appointments_bp
     app.register_blueprint(appointments_bp)
+    from app.routes.portfolios import portfolios_bp
+    app.register_blueprint(portfolios_bp)
     
     # Route de santé
     @app.route('/api/health')
