@@ -6,5 +6,18 @@ from .availability import Availability
 from .time_block import TimeBlock
 from .appointment import Appointment
 from .portfolio import Portfolio
+from .loyalty_account import LoyaltyAccount
+from .loyalty_history import LoyaltyHistory
 
-__all__ = ['User', 'Pro', 'Specialite', 'Service', 'Availability', 'TimeBlock', 'Appointment', 'Portfolio']
+__all__ = [
+    'User', 
+    'Pro', 
+    'Specialite', 
+    'Service', 
+    'Availability', 
+    'TimeBlock', 
+    'Appointment', 
+    'Portfolio', 
+    'LoyaltyAccount',
+    'LoyaltyHistory'
+    ]

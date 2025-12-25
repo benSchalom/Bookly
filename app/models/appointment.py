@@ -73,5 +73,7 @@ class Appointment(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
     
+
+    # Affichage ppour les developpeurs
     def __repr__(self):
         return f'<Appointment {self.date} {self.heure_debut} - {self.client.prenom if self.client else "?"} chez {self.pro.business_name if self.pro else "?"}>'
