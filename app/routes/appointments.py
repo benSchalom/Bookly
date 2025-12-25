@@ -4,6 +4,8 @@ from app import db
 from app.models.user import User
 from app.models.pro import Pro
 from app.models.service import Service
+from app.models.loyalty_account import LoyaltyAccount
+from app.models.loyalty_history import LoyaltyHistory
 from app.models.availability import Availability
 from app.models.time_block import TimeBlock
 from app.models.appointment import Appointment
@@ -238,6 +240,35 @@ def modifier_rdv(appointment_id):
     if rdv_datetime - now < timedelta(hours=24):
         appointment.is_late_cancellation = True
     
+    # Mise a jour des points de fidelite
+    if nouveau_statut  == 'Terminer' and appointment.statut!= 'Terminer':
+        loyaltyAccount = LoyaltyAccount.query.filter_by(client_id =appointment.client_id, pro_id = appointment.pro_id).first()
+
+        if not loyaltyAccount:
+            loyaltyAccount = LoyaltyAccount(
+                client_id = appointment.client_id,
+                pro_id = appointment.pro_id,
+                points_total = 0,
+            )
+            db.session.add(loyaltyAccount)
+
+        # recupere le service car chaque service a son nombre de point de fidelite
+        service = Service.query.get(appointment.service_id)
+
+        # ajouter les points au compte de fidelité
+        loyaltyAccount.points_total += service.points_fidelite
+
+        # creer une entrer dans l'historique
+        loyaltyHistory = LoyaltyHistory(
+            client_id = appointment.client_id,
+            pro_id = appointment.pro_id,
+            appointment_id = appointment_id,
+            points_change = service.points_fidelite,
+            raison = f'Rendez vous terminé- {service.nom}'
+        )
+
+        db.session.add(loyaltyHistory)
+
     appointment.statut = nouveau_statut
 
     db.session.commit()

@@ -38,6 +38,8 @@ def create_app(config_name='development'):
     app.register_blueprint(appointments_bp)
     from app.routes.portfolios import portfolios_bp
     app.register_blueprint(portfolios_bp)
+    from app.routes.loyalty import loyalty_bp
+    app.register_blueprint(loyalty_bp)
     
     # Route de santé
     @app.route('/api/health')
