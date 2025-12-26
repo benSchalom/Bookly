@@ -5,13 +5,13 @@ from flask_jwt_extended import create_access_token, create_refresh_token, jwt_re
 from app import db
 from app.models import User, Pro, Specialite
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
+auth_bp = Blueprint('auth', __name__)
 
 
 #===============================
 # Inscription client
 #===============================
-@auth_bp.route('/inscription', methods = ['POST'])
+@auth_bp.route('/auth/inscription', methods = ['POST'])
 def inscription_client():
     # Creer un compte client
     # POST /api/auth/inscription
@@ -62,7 +62,7 @@ def inscription_client():
 #===============================
 # Inscription pro
 #===============================
-@auth_bp.route('/inscription-pro', methods = ['POST'])
+@auth_bp.route('/auth/inscription-pro', methods = ['POST'])
 def inscription_pro():
     # Créer un compte pro
     # POST /api/auth/inscription-pro
@@ -141,7 +141,7 @@ def inscription_pro():
 #===============================
 # Connexion
 #===============================
-@auth_bp.route('/connexion', methods=['POST'])
+@auth_bp.route('/auth/connexion', methods=['POST'])
 def connexion():
     # se connecter
     # POST /api/auth/connexion
@@ -196,7 +196,7 @@ def connexion():
 #===============================
 # Recuperer l'utilisateur actuel
 #===============================
-@auth_bp.route('/moi', methods=['GET'])
+@auth_bp.route('/auth/moi', methods=['GET'])
 @jwt_required()
 def utilisateur_actuel():
     # Récuperer l'utilisateur connecté
@@ -231,7 +231,7 @@ def utilisateur_actuel():
 # ============================================
 # Rafraichissement du Token
 # ============================================
-@auth_bp.route('/rafraichir', methods=['POST'])
+@auth_bp.route('/auth/rafraichir', methods=['POST'])
 @jwt_required(refresh=True)
 def rafraichir():
     
@@ -256,9 +256,9 @@ def rafraichir():
 
 
 # ============================================
-# LISTE DES SPÉCIALITÉS (pour le form register-pro)
+# Liste des specialités (pour le form register-pro)
 # ============================================
-@auth_bp.route('/specialites', methods=['GET'])
+@auth_bp.route('/auth/specialites', methods=['GET'])
 def recuperer_specialites():
 
     # Liste toutes les spécialités

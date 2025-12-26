@@ -11,7 +11,7 @@ availabilities_bp = Blueprint('dispo', __name__)
 #===============================
 # Créer horaire
 #===============================
-@availabilities_bp.route('/api/pros/availabilities', methods=['POST'])
+@availabilities_bp.route('/pros/availabilities', methods=['POST'])
 @jwt_required()
 def creer_horaire():
 
@@ -67,7 +67,7 @@ def creer_horaire():
         return jsonify({'error': str(e)}), 500
  
 
-@availabilities_bp.route('/api/pros/availabilities', methods=['GET'])
+@availabilities_bp.route('/pros/availabilities', methods=['GET'])
 @jwt_required()
 def lister_horaires():
     # lister les horaires
@@ -97,7 +97,7 @@ def lister_horaires():
         return jsonify({'error': str(e)}), 500
 
 
-@availabilities_bp.route('/api/pros/availabilities/<int:availability_id>', methods=['PUT'])
+@availabilities_bp.route('/pros/availabilities/<int:availability_id>', methods=['PUT'])
 @jwt_required()
 def modifier_horaire(availability_id) :
 
@@ -150,7 +150,7 @@ def modifier_horaire(availability_id) :
     
 
 
-@availabilities_bp.route('/api/pros/availabilities/<int:availability_id>', methods=['DELETE'])
+@availabilities_bp.route('/pros/availabilities/<int:availability_id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_horaire(availability_id):  
 

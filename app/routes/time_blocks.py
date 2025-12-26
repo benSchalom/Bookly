@@ -11,7 +11,7 @@ time_blocks_bp = Blueprint('time_blocks', __name__)
 #===============================
 # Créer blocage
 #===============================
-@time_blocks_bp.route('/api/pros/time-blocks', methods=['POST'])
+@time_blocks_bp.route('/pros/time-blocks', methods=['POST'])
 @jwt_required()
 def creer_blocage():
 
@@ -71,7 +71,7 @@ def creer_blocage():
 #===============================
 # Lister blocages
 #===============================
-@time_blocks_bp.route('/api/pros/time-blocks', methods=['GET'])
+@time_blocks_bp.route('/pros/time-blocks', methods=['GET'])
 @jwt_required()
 def lister_blocages():
 
@@ -105,7 +105,7 @@ def lister_blocages():
 #===============================
 # Supprimer blocage
 #===============================
-@time_blocks_bp.route('/api/pros/time-blocks/<int:block_id>', methods=['DELETE'])
+@time_blocks_bp.route('/pros/time-blocks/<int:block_id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_blocage(block_id):
 

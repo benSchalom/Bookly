@@ -11,13 +11,13 @@ from app.models.time_block import TimeBlock
 from app.models.appointment import Appointment
 from datetime import datetime, timedelta, timezone
 
-appointments_bp = Blueprint('rendez-vous', __name__)
+appointments_bp = Blueprint('rendez-vous', __name__ )
 
 
 #===============================
 # Créer un rendez vous
 #===============================
-@appointments_bp .route('/api/appointments', methods=['POST'])
+@appointments_bp .route('/appointments', methods=['POST'])
 @jwt_required()
 def creer_rdv():
 
@@ -131,7 +131,7 @@ def creer_rdv():
 #===============================
 # Consulter tous les rendez vous
 #===============================
-@appointments_bp.route('/api/appointments', methods=['GET'])  
+@appointments_bp.route('/appointments', methods=['GET'])  
 @jwt_required()
 def lister_rdv():
     # recuperaion de l'identifiant de l'utilisateur connecte
@@ -157,7 +157,7 @@ def lister_rdv():
 #===============================
 # Consulter un rendez vous
 #===============================
-@appointments_bp.route('/api/appointments/<int:appointment_id>', methods=['GET'])
+@appointments_bp.route('/appointments/<int:appointment_id>', methods=['GET'])
 @jwt_required()
 def details_rdv(appointment_id):
 
@@ -185,7 +185,7 @@ def details_rdv(appointment_id):
 #===============================
 # Mettre a jour un rendez vous
 #===============================
-@appointments_bp.route('/api/appointments/<int:appointment_id>', methods=['PUT'])
+@appointments_bp.route('/appointments/<int:appointment_id>', methods=['PUT'])
 @jwt_required()
 def modifier_rdv(appointment_id):
     # recuperaion de l'identifiant de l'utilisateur connecte

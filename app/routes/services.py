@@ -6,11 +6,11 @@ from app.models.user import User
 
 services_bp = Blueprint('services', __name__)
 
-@services_bp.route('/api/pros/services', methods=['POST'])
+@services_bp.route('/pros/services', methods=['POST'])
 @jwt_required()
 def creer_service():
     # Creer un nouveau service (pour les pro)
-    # POST /api/pros/services
+    # POST  /pros/services
     # Headers: Authorization: Bearer <access_token>
     # Body{
     #    nom, description, duree_minutes, prix,
@@ -65,7 +65,7 @@ def creer_service():
         return jsonify({'error': str(e)}), 500
     
 
-@services_bp.route('/api/pros/services', methods=['GET'])
+@services_bp.route('/pros/services', methods=['GET'])
 @jwt_required()
 def lister_mes_services():
     # liste des services offert par un pro
@@ -96,7 +96,7 @@ def lister_mes_services():
         return jsonify({'error': str(e)}), 500
     
 
-@services_bp.route('/api/pros/services/<int:service_id>', methods=['PUT'])
+@services_bp.route('/pros/services/<int:service_id>', methods=['PUT'])
 @jwt_required()
 def modifier_service(service_id):
 
@@ -159,7 +159,7 @@ def modifier_service(service_id):
         return jsonify({'error': str(e)}), 500
     
 
-@services_bp.route('/api/pros/services/<int:service_id>', methods=['DELETE'])
+@services_bp.route('/pros/services/<int:service_id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_service(service_id):
 

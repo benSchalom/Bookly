@@ -6,7 +6,7 @@ from app.models.user import User
 
 portfolios_bp = Blueprint('portfolios', __name__)
 
-@portfolios_bp.route('/api/pros/portfolios', methods=['POST'])
+@portfolios_bp.route('/pros/portfolios', methods=['POST'])
 @jwt_required()
 def ajouter_image():
     # Ajouter une photo au portfolio du pro
@@ -57,7 +57,7 @@ def ajouter_image():
     
 
     
-@portfolios_bp.route('/api/pros/<int:pro_id>/portfolios', methods=['GET'])
+@portfolios_bp.route('/pros/<int:pro_id>/portfolios', methods=['GET'])
 def lister_images(pro_id):
     # Liste publique de toutes les photos 
     # constituant le portfolio d'un coiffeur
@@ -77,7 +77,7 @@ def lister_images(pro_id):
 
 
 
-@portfolios_bp.route('/api/pros/portfolios/<int:image_id>', methods=['DELETE'])
+@portfolios_bp.route('/pros/portfolios/<int:image_id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_image(image_id):
 

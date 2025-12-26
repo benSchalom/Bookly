@@ -26,23 +26,12 @@ def create_app(config_name='development'):
     CORS(app, resources={r"/api/*": {"origins": app.config['CORS_ORIGINS']}})
 
     # Routes
-    from app.routes import auth_bp
-    app.register_blueprint(auth_bp)
-    from app.routes.services import services_bp
-    app.register_blueprint(services_bp)
-    from app.routes.availabilities import availabilities_bp
-    app.register_blueprint(availabilities_bp)
-    from app.routes.time_blocks import time_blocks_bp
-    app.register_blueprint(time_blocks_bp)
-    from app.routes.appointments import appointments_bp
-    app.register_blueprint(appointments_bp)
-    from app.routes.portfolios import portfolios_bp
-    app.register_blueprint(portfolios_bp)
-    from app.routes.loyalty import loyalty_bp
-    app.register_blueprint(loyalty_bp)
+    from app.routes import all_blueprints
+    for bp in all_blueprints:
+        app.register_blueprint(bp, url_prefix='/api')
     
     # Route de santé
-    @app.route('/api/health')
+    @app.route('/health')
     def health():
         return {'status': 'ok', 'message': 'Bookly API is running'}, 200
     

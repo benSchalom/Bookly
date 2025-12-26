@@ -7,7 +7,7 @@ from app import db
 
 loyalty_bp = Blueprint('loyalty', __name__ )
 
-@loyalty_bp.route('/api/loyalty/accounts', methods=['GET'])
+@loyalty_bp.route('/loyalty/accounts', methods=['GET'])
 @jwt_required()
 def lister_comptes_loyalty():
     try:
@@ -34,9 +34,9 @@ def lister_comptes_loyalty():
     
 
 
-@loyalty_bp.route('/api/loyalty/history', methods=['GET'])
+@loyalty_bp.route('/loyalty/history/<int:pro_id>', methods=['GET'])
 @jwt_required()
-def lister_historque():
+def lister_historque(pro_id):
     try:
         # recuperaion de l'identifiant de l'utilisateur connecte
         current_user_id = get_jwt_identity()
@@ -47,11 +47,6 @@ def lister_historque():
 
         if user.role != 'client':
             return jsonify({'error': 'Cette information est reservé au client'}), 403
-        
-        pro_id = request.args.get('pro_id', type = int)
-
-        if not pro_id:
-            return jsonify({'error': 'Vous devez mentionner le pro dont vous voulez l\'historique'}), 400
         
         history = LoyaltyHistory.query.filter_by(client_id = user.id, pro_id = pro_id).order_by(LoyaltyHistory.created_at.desc()).all()
 

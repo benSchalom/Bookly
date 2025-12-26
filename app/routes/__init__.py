@@ -5,14 +5,16 @@ from .time_blocks import time_blocks_bp
 from .appointments import appointments_bp
 from .portfolios import portfolios_bp
 from .loyalty import loyalty_bp
+from .search import search_bp
 
 # Liste de tous les blueprints à enregistrer
-__all__ = [
-        'auth_bp', 
-        'services_bp', 
-        'availabilities_bp', 
-        'time_blocks_bp', 
-        'appointments_bp', 
-        'portfolios_bp', 
-        'loyalty_bp'
-    ]
+all_blueprints= [
+    auth_bp, 
+    services_bp, 
+    availabilities_bp, 
+    time_blocks_bp, 
+    appointments_bp, 
+    portfolios_bp, 
+    loyalty_bp,
+    search_bp
+]
