@@ -3,7 +3,7 @@ from app.models.user import User
 from app.models.pro import Pro
 from app.models.service import Service
 from app.models.portfolio import Portfolio
-#from app.models.review import Review
+from app.models.review import Review
 from app.models.availability import Availability
 from app import db
 
@@ -66,8 +66,8 @@ def profil_public_pro(pro_id):
         liste_portfolios = [p.to_dict() for p in portfolios_pro]
 
         # les 20 derniers avis sur le pro
-        #avis_pro = Review.query.filter_by(pro_id = pro_id).order_by(Review.created_at.desc()).limit(20).all()
-        #liste_avis = [a.to_dict() for a in avis_pro]
+        avis_pro = Review.query.filter_by(pro_id = pro_id).order_by(Review.created_at.desc()).limit(20).all()
+        liste_avis = [a.to_dict() for a in avis_pro]
 
         # Disponibilité du pro
         disponibilites_pro = Availability.query.filter_by(pro_id = pro_id, is_active = True).order_by(Availability.jour_semaine).all()
@@ -77,7 +77,7 @@ def profil_public_pro(pro_id):
             'Pros': infos_pro,
             'Services': liste_services,
             'Portfolios': liste_portfolios,
-            #'Avis': liste_avis,
+            'Avis': liste_avis,
             'Disponibilites': liste_disponibilites
         }), 200
 

@@ -6,6 +6,7 @@ from .appointments import appointments_bp
 from .portfolios import portfolios_bp
 from .loyalty import loyalty_bp
 from .search import search_bp
+from .reviews import review_bp
 
 # Liste de tous les blueprints à enregistrer
 all_blueprints= [
@@ -16,5 +17,6 @@ all_blueprints= [
     appointments_bp, 
     portfolios_bp, 
     loyalty_bp,
-    search_bp
+    search_bp,
+    review_bp
 ]
