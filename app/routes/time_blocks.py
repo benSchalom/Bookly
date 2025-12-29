@@ -4,6 +4,7 @@ from app import db
 from app.models.user import User
 from app.models.time_block import TimeBlock
 from datetime import datetime
+from app.services.logger import logger
 
 time_blocks_bp = Blueprint('time_blocks', __name__)
 
@@ -65,6 +66,7 @@ def creer_blocage():
     
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -139,4 +141,5 @@ def supprimer_blocage(block_id):
     
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500

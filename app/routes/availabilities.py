@@ -4,8 +4,10 @@ from app import db
 from app.models.user import User
 from app.models.availability import Availability
 from datetime import datetime
-availabilities_bp = Blueprint('dispo', __name__)
+from app.services.logger import logger
 
+
+availabilities_bp = Blueprint('dispo', __name__)
 
 #===============================
 # Créer horaire
@@ -64,6 +66,7 @@ def creer_horaire():
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
  
 
@@ -146,6 +149,7 @@ def modifier_horaire(availability_id) :
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
 
@@ -184,4 +188,5 @@ def supprimer_horaire(availability_id):
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500

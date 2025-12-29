@@ -6,6 +6,7 @@ from app.models.appointment import Appointment
 from app.models.user import User
 from app.models.pro import Pro
 
+
 review_bp = Blueprint('reviews', __name__)
 
 @review_bp.route('/reviews', methods=['POST'])

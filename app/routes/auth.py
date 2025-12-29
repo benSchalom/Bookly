@@ -1,5 +1,5 @@
 # Routes Auth pour Authentification
-from app.services.validators import validation_email, validation_phone
+from app.services.validators import validation_email, validation_phone, validation_mot_de_passe
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from app import db, limiter
@@ -7,6 +7,8 @@ from app.models import User, Pro, Specialite
 from app.models.password_reset_token import PasswordResetToken
 from datetime import timedelta, datetime, timezone
 from app.services.email import envoyer_email
+from app.services.logger import logger
+
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -44,6 +46,11 @@ def inscription_client():
         if User.query.filter_by(email = data['email']).first():
             return jsonify({'error': 'Cet email est déjà utilisé'}), 400
         
+        # Validation mot de passe
+        valide, erreur = validation_mot_de_passe(data['password'])
+        if not valide:
+            return jsonify({'error': erreur}), 400
+        
         #si tout est beau, on creer le user
         user = User(
             email = data['email'],
@@ -70,6 +77,7 @@ def inscription_client():
         
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
 
@@ -106,6 +114,11 @@ def inscription_pro():
         if User.query.filter_by(email=data['email']).first():
             return jsonify({'error': 'Cet email est déjà utilisé'}), 400
         
+        # Validation mot de passe
+        valide, erreur = validation_mot_de_passe(data['password'])
+        if not valide:
+            return jsonify({'error': erreur}), 400
+                
         # Vérifier que la spécialité existe
         specialite = Specialite.query.get(data['specialite_id'])
         if not specialite:
@@ -156,6 +169,7 @@ def inscription_pro():
         
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
 
@@ -211,7 +225,8 @@ def connexion():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500   
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 
 #===============================
@@ -344,6 +359,7 @@ def recuperation_mot_de_passe():
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
 
@@ -376,6 +392,11 @@ def reset_password():
         if not user:
             return jsonify({'error': 'Utilisateur non trouvé'}), 404
         
+        # Validation nouveau mot de passe
+        valide, erreur = validation_mot_de_passe(data['new_password'])
+        if not valide:
+            return jsonify({'error': erreur}), 400
+        
         # Changer mot de passe
         user.set_password(data['new_password'])
         
@@ -388,4 +409,5 @@ def reset_password():
         
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500

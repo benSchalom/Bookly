@@ -11,6 +11,7 @@ from app.models.time_block import TimeBlock
 from app.models.appointment import Appointment
 from datetime import datetime, timedelta, timezone
 from app.services.email import envoyer_confirmation_rdv, envoyer_rappel_rdv, envoyer_annulation_rdv
+from app.services.logger import logger
 
 appointments_bp = Blueprint('rendez-vous', __name__ )
 
@@ -128,6 +129,7 @@ def creer_rdv():
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
  
 
@@ -202,113 +204,119 @@ def details_rdv(appointment_id):
 @appointments_bp.route('/appointments/<int:appointment_id>', methods=['PUT'])
 @jwt_required()
 def modifier_rdv(appointment_id):
-    # recuperaion de l'identifiant de l'utilisateur connecte
-    current_user_id = get_jwt_identity()
-    user =User.query.get(int(current_user_id))
+    try:
+        # recuperaion de l'identifiant de l'utilisateur connecte
+        current_user_id = get_jwt_identity()
+        user =User.query.get(int(current_user_id))
 
-    # recuperer le rendez vous dont on veut les informations
-    appointment = Appointment.query.get(int(appointment_id))
+        # recuperer le rendez vous dont on veut les informations
+        appointment = Appointment.query.get(int(appointment_id))
 
-    if not appointment:
-        return jsonify({'error': 'Desolé, mais aucune information concernant ce rendez vous n\'a été trouvé'}), 404
-    
-    # verification des droits d'acces aux informations du rendez vous
-    if user.role == 'client' and appointment.client_id != user.id:
-        return jsonify({'error': 'Accès non autorisé'}), 403
-
-    if user.role == 'pro':
-        if not user.pro or appointment.pro_id != user.pro.id:
+        if not appointment:
+            return jsonify({'error': 'Desolé, mais aucune information concernant ce rendez vous n\'a été trouvé'}), 404
+        
+        # verification des droits d'acces aux informations du rendez vous
+        if user.role == 'client' and appointment.client_id != user.id:
             return jsonify({'error': 'Accès non autorisé'}), 403
-    
-    # Recuperer les nouvelles donnees a partir du formulaire
-    data = request.get_json()
-    nouveau_statut = data['statut']
 
-    # Dans le cadre de la modification, un client peut juste faire une annulation 
-    if user.role == 'client':
-        if nouveau_statut != 'Annuler':
-            return jsonify({'error': 'Vous ne pouvez pas effectué cette opération'}), 403
-    
-    if user.role == 'pro':
-        # declarattion des differentes transition de statut valide
-        transitions_valides = {
-            'En attente': ['Confirmer', 'Annuler'], # un rdv en attente peut passer a confirmer ou annuler
-            'Confirmer': ['Terminer', 'Annuler'], # un rdv confimer peut passer a terminer ou annuler
-            'Terminer': [],  # un rdv terminer ne subira plus de changement
-            'Annuler': []   # un rdv annuler ne subira plus de transitions
-        }
-    
-        if nouveau_statut not in transitions_valides[appointment.statut]:
-            return jsonify({'error': 'Changement de statut invalide'}), 400
-    
-    # en cas d'annulation de rendez vous
-    if nouveau_statut == 'Annuler':
-        appointment.cancelled_by = user.id
-        appointment.cancelled_at = datetime.now(timezone.utc)
-        appointment.cancellation_reason = data.get('raison')
-        cancelled_by_role = user.role
-        envoyer_annulation_rdv(appointment, cancelled_by_role)
+        if user.role == 'pro':
+            if not user.pro or appointment.pro_id != user.pro.id:
+                return jsonify({'error': 'Accès non autorisé'}), 403
+        
+        # Recuperer les nouvelles donnees a partir du formulaire
+        data = request.get_json()
+        nouveau_statut = data['statut']
 
-        # Vérifier si il s'agit d'une annulation tardive non conforme au reglement
-        now = datetime.now(timezone.utc)
-        rdv_datetime = datetime.combine(appointment.date, appointment.heure_debut, tzinfo=timezone.utc)   
+        # Dans le cadre de la modification, un client peut juste faire une annulation 
+        if user.role == 'client':
+            if nouveau_statut != 'Annuler':
+                return jsonify({'error': 'Vous ne pouvez pas effectué cette opération'}), 403
+        
+        if user.role == 'pro':
+            # declarattion des differentes transition de statut valide
+            transitions_valides = {
+                'En attente': ['Confirmer', 'Annuler'], # un rdv en attente peut passer a confirmer ou annuler
+                'Confirmer': ['Terminer', 'Annuler'], # un rdv confimer peut passer a terminer ou annuler
+                'Terminer': [],  # un rdv terminer ne subira plus de changement
+                'Annuler': []   # un rdv annuler ne subira plus de transitions
+            }
+        
+            if nouveau_statut not in transitions_valides[appointment.statut]:
+                return jsonify({'error': 'Changement de statut invalide'}), 400
+        
+        # en cas d'annulation de rendez vous
+        if nouveau_statut == 'Annuler':
+            appointment.cancelled_by = user.id
+            appointment.cancelled_at = datetime.now(timezone.utc)
+            appointment.cancellation_reason = data.get('raison')
+            cancelled_by_role = user.role
+            envoyer_annulation_rdv(appointment, cancelled_by_role)
 
-        if rdv_datetime - now < timedelta(hours=2):
-            appointment.is_late_cancellation = True
-            loyalty = LoyaltyAccount.query.filter_by(
-                client_id=appointment.client_id,
-                pro_id=appointment.pro_id
-            ).first()
+            # Vérifier si il s'agit d'une annulation tardive non conforme au reglement
+            now = datetime.now(timezone.utc)
+            rdv_datetime = datetime.combine(appointment.date, appointment.heure_debut, tzinfo=timezone.utc)   
 
-            if loyalty:
-                loyalty.late_cancellation_count += 1
-                loyalty.last_late_cancellation = datetime.now(timezone.utc)
-            else:
-                # Créer compte si existe pas
-                loyalty = LoyaltyAccount(
+            if rdv_datetime - now < timedelta(hours=2):
+                appointment.is_late_cancellation = True
+                loyalty = LoyaltyAccount.query.filter_by(
                     client_id=appointment.client_id,
-                    pro_id=appointment.pro_id,
-                    late_cancellation_count=1,
-                    last_late_cancellation=datetime.now(timezone.utc)
-                )
-                db.session.add(loyalty)
-                
-    # Mise a jour des points de fidelite
-    if nouveau_statut  == 'Terminer' and appointment.statut!= 'Terminer':
-        loyaltyAccount = LoyaltyAccount.query.filter_by(client_id =appointment.client_id, pro_id = appointment.pro_id).first()
+                    pro_id=appointment.pro_id
+                ).first()
 
-        if not loyaltyAccount:
-            loyaltyAccount = LoyaltyAccount(
+                if loyalty:
+                    loyalty.late_cancellation_count += 1
+                    loyalty.last_late_cancellation = datetime.now(timezone.utc)
+                else:
+                    # Créer compte si existe pas
+                    loyalty = LoyaltyAccount(
+                        client_id=appointment.client_id,
+                        pro_id=appointment.pro_id,
+                        late_cancellation_count=1,
+                        last_late_cancellation=datetime.now(timezone.utc)
+                    )
+                    db.session.add(loyalty)
+                    
+        # Mise a jour des points de fidelite
+        if nouveau_statut  == 'Terminer' and appointment.statut!= 'Terminer':
+            loyaltyAccount = LoyaltyAccount.query.filter_by(client_id =appointment.client_id, pro_id = appointment.pro_id).first()
+
+            if not loyaltyAccount:
+                loyaltyAccount = LoyaltyAccount(
+                    client_id = appointment.client_id,
+                    pro_id = appointment.pro_id,
+                    points_total = 0,
+                )
+                db.session.add(loyaltyAccount)
+
+            # recupere le service car chaque service a son nombre de point de fidelite
+            service = Service.query.get(appointment.service_id)
+
+            # ajouter les points au compte de fidelité
+            loyaltyAccount.points_total += service.points_fidelite
+
+            # creer une entrer dans l'historique
+            loyaltyHistory = LoyaltyHistory(
                 client_id = appointment.client_id,
                 pro_id = appointment.pro_id,
-                points_total = 0,
+                appointment_id = appointment_id,
+                points_change = service.points_fidelite,
+                raison = f'Rendez vous terminé- {service.nom}'
             )
-            db.session.add(loyaltyAccount)
 
-        # recupere le service car chaque service a son nombre de point de fidelite
-        service = Service.query.get(appointment.service_id)
+            db.session.add(loyaltyHistory)
 
-        # ajouter les points au compte de fidelité
-        loyaltyAccount.points_total += service.points_fidelite
+        appointment.statut = nouveau_statut
 
-        # creer une entrer dans l'historique
-        loyaltyHistory = LoyaltyHistory(
-            client_id = appointment.client_id,
-            pro_id = appointment.pro_id,
-            appointment_id = appointment_id,
-            points_change = service.points_fidelite,
-            raison = f'Rendez vous terminé- {service.nom}'
-        )
+        db.session.commit()
 
-        db.session.add(loyaltyHistory)
-
-    appointment.statut = nouveau_statut
-
-    db.session.commit()
-
-    return jsonify({
-        'message': 'Rendez vous modifié avec succès',
-        'Rendez vous': appointment.to_dict()
-    }), 200
+        return jsonify({
+            'message': 'Rendez vous modifié avec succès',
+            'Rendez vous': appointment.to_dict()
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
+        return jsonify({'error': str(e)}), 500 
 
 

@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models.portfolio import Portfolio
 from app.models.user import User
+from app.services.logger import logger
 
 portfolios_bp = Blueprint('portfolios', __name__)
 
@@ -53,6 +54,7 @@ def ajouter_image():
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
 
@@ -73,6 +75,7 @@ def lister_images(pro_id):
     
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -110,4 +113,5 @@ def supprimer_image(image_id):
         }), 200
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500

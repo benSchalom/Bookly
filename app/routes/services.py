@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models.service import Service
 from app.models.user import User
+from app.services.logger import logger
 
 services_bp = Blueprint('services', __name__)
 
@@ -62,6 +63,7 @@ def creer_service():
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
 
@@ -156,6 +158,7 @@ def modifier_service(service_id):
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
 
@@ -193,4 +196,5 @@ def supprimer_service(service_id):
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
