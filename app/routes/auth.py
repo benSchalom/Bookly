@@ -2,8 +2,11 @@
 from app.services.validators import validation_email, validation_phone
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
-from app import db
+from app import db, limiter
 from app.models import User, Pro, Specialite
+from app.models.password_reset_token import PasswordResetToken
+from datetime import timedelta, datetime, timezone
+from app.services.email import envoyer_email
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -12,6 +15,7 @@ auth_bp = Blueprint('auth', __name__)
 # Inscription client
 #===============================
 @auth_bp.route('/auth/inscription', methods = ['POST'])
+@limiter.limit("3 per hour") 
 def inscription_client():
     # Creer un compte client
     # POST /api/auth/inscription
@@ -73,6 +77,7 @@ def inscription_client():
 # Inscription pro
 #===============================
 @auth_bp.route('/auth/inscription-pro', methods = ['POST'])
+@limiter.limit("3 per hour") 
 def inscription_pro():
     # Créer un compte pro
     # POST /api/auth/inscription-pro
@@ -158,6 +163,7 @@ def inscription_pro():
 # Connexion
 #===============================
 @auth_bp.route('/auth/connexion', methods=['POST'])
+@limiter.limit("5 per 10 minutes") 
 def connexion():
     # se connecter
     # POST /api/auth/connexion
@@ -183,7 +189,6 @@ def connexion():
             return jsonify({'error': 'Votre compte est désactivé'}), 403
         
         # Mettre a jour l'info sur la derniere connexion
-        from datetime import datetime, timezone
         user.last_login = datetime.now(timezone.utc)
         db.session.commit()
 
@@ -287,4 +292,100 @@ def recuperer_specialites():
         }), 200
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+# ============================================
+# reset de mot de passe
+# ============================================
+@auth_bp.route('/auth/mot-de-passe-oublie', methods=['POST'])
+@limiter.limit("3 per hour") 
+def recuperation_mot_de_passe():
+    try:
+        data = request.get_json()
+        if 'email' not in data:
+            return jsonify({'error': 'Email requis'}), 400
+        
+        # chercher l'utilisateur
+        user = User.query.filter_by(email=data['email']).first()
+
+        # si l'utilisateur n'existe pas
+        if not user:
+            return jsonify({'message': 'Si cet email existe, un lien a été envoyé'}), 200
+        
+        # Marquer anciens tokens comme utilisés
+        old_tokens = PasswordResetToken.query.filter_by(user_id=user.id, used=False).all()
+        for token in old_tokens:
+            token.used = True
+
+        new_token = PasswordResetToken(
+            user_id=user.id,
+            token=PasswordResetToken.generate_token(),
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30)
+        )
+        db.session.add(new_token)
+
+        reset_link = f"https://asteur.app/reset-password?token={new_token.token}"
+
+        html = f"""
+            <h2>Réinitialisation de mot de passe</h2>
+            <p>Bonjour {user.prenom},</p>
+            <p>Vous avez demandé à réinitialiser votre mot de passe.</p>
+            <p>Cliquez sur ce lien (valide 30 minutes) :</p>
+            <p><a href="{reset_link}">{reset_link}</a></p>
+            <p>Si vous n'avez pas demandé ceci, ignorez cet email.</p>
+        """
+
+        envoyer_email(user.email, "Réinitialisation mot de passe - Asteur Là", html)
+
+        db.session.commit()
+
+        return jsonify({'message': 'Si cet email existe, un lien a été envoyé'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+    
+
+@auth_bp.route('/auth/reinitialiser-mot-de-passe', methods=['POST'])
+@limiter.limit("5 per hour")
+def reset_password():
+    #Réinitialiser le mot de passe avec token
+    try:
+        data = request.get_json()
+        
+        # Validation champs requis
+        required = ['token', 'new_password']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'{field} requis'}), 400
+        
+        # Trouver token
+        reset_token = PasswordResetToken.query.filter_by(token=data['token']).first()
+        
+        if not reset_token:
+            return jsonify({'error': 'Token invalide'}), 400
+        
+        # Vérifier validité
+        if not reset_token.is_valid():
+            return jsonify({'error': 'Token expiré ou déjà utilisé'}), 400
+        
+        # Récupérer user
+        user = User.query.get(reset_token.user_id)
+        
+        if not user:
+            return jsonify({'error': 'Utilisateur non trouvé'}), 404
+        
+        # Changer mot de passe
+        user.set_password(data['new_password'])
+        
+        # Marquer token utilisé
+        reset_token.used = True
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Mot de passe réinitialisé avec succès'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500

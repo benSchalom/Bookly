@@ -9,6 +9,7 @@ from .portfolio import Portfolio
 from .loyalty_account import LoyaltyAccount
 from .loyalty_history import LoyaltyHistory
 from .review import Review
+from .password_reset_token import PasswordResetToken
 
 __all__ = [
     'User', 
@@ -21,5 +22,6 @@ __all__ = [
     'Portfolio', 
     'LoyaltyAccount',
     'LoyaltyHistory',
-    'Review'
+    'Review',
+    'PasswordResetToken'
     ]
