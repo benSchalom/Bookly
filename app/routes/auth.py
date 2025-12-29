@@ -361,7 +361,7 @@ def recuperation_mot_de_passe():
         db.session.rollback()
         logger.error(f"Erreur {request.endpoint}: {str(e)}")
         return jsonify({'error': str(e)}), 500
-    
+   
 
 @auth_bp.route('/auth/reinitialiser-mot-de-passe', methods=['POST'])
 @limiter.limit("5 per hour")
