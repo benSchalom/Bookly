@@ -4,12 +4,14 @@ from flask_jwt_extended import JWTManager #jwt
 from flask_cors import CORS #cross origin resource sharing
 from flask_migrate import Migrate #migration
 from config import config #mes config
+from flask_mail import Mail
 
 
 # extensions
 db = SQLAlchemy()
 jwt = JWTManager()
 migrate = Migrate()
+mail = Mail()
 
 def create_app(config_name='development'):
     app = Flask(__name__)
@@ -23,6 +25,7 @@ def create_app(config_name='development'):
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
     CORS(app, resources={r"/api/*": {"origins": app.config['CORS_ORIGINS']}})
 
     # Routes

@@ -10,6 +10,7 @@ from app.models.availability import Availability
 from app.models.time_block import TimeBlock
 from app.models.appointment import Appointment
 from datetime import datetime, timedelta, timezone
+from app.services.email import envoyer_confirmation_rdv, envoyer_rappel_rdv, envoyer_annulation_rdv
 
 appointments_bp = Blueprint('rendez-vous', __name__ )
 
@@ -118,6 +119,8 @@ def creer_rdv():
         db.session.add(appointment)
         db.session.commit()
 
+        envoyer_confirmation_rdv(appointment)
+
         return jsonify({
             'message': 'Reservation crée avec succès',
             'reservation': appointment.to_dict()
@@ -224,21 +227,23 @@ def modifier_rdv(appointment_id):
             'Annuler': []   # un rdv annuler ne subira plus de transitions
         }
     
-    if nouveau_statut not in transitions_valides[appointment.statut]:
-        return jsonify({'error': 'Changement de statut invalide'}), 400
+        if nouveau_statut not in transitions_valides[appointment.statut]:
+            return jsonify({'error': 'Changement de statut invalide'}), 400
     
     # en cas d'annulation de rendez vous
     if nouveau_statut == 'Annuler':
         appointment.cancelled_by = user.id
         appointment.cancelled_at = datetime.now(timezone.utc)
         appointment.cancellation_reason = data.get('raison')
+        cancelled_by_role = user.role
+        envoyer_annulation_rdv(appointment, cancelled_by_role)
 
-    # Vérifier si il s'agit d'une annulation tardive non conforme au reglement
-    now = datetime.now(timezone.utc)
-    rdv_datetime = datetime.combine(appointment.date, appointment.heure_debut, tzinfo=timezone.utc)   
+        # Vérifier si il s'agit d'une annulation tardive non conforme au reglement
+        now = datetime.now(timezone.utc)
+        rdv_datetime = datetime.combine(appointment.date, appointment.heure_debut, tzinfo=timezone.utc)   
 
-    if rdv_datetime - now < timedelta(hours=24):
-        appointment.is_late_cancellation = True
+        if rdv_datetime - now < timedelta(hours=24):
+            appointment.is_late_cancellation = True
     
     # Mise a jour des points de fidelite
     if nouveau_statut  == 'Terminer' and appointment.statut!= 'Terminer':

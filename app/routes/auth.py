@@ -72,7 +72,7 @@ def inscription_pro():
         data = request.get_json() #recuperation des données a partir du formulaire
 
         #Validation des champs requis
-        required_fields = ['email', 'password', 'nom', 'prenom', 'telephone', 'business_name', 'specialite_id']
+        required_fields = ['email', 'password', 'nom', 'prenom', 'telephone', 'business_name', 'specialite_id', 'pays', 'province', 'ville', 'adresse_salon']
         for field in required_fields:
             if field not in data:
                 return jsonify({'error': f'Le champ {field} est requis'}), 400
@@ -84,13 +84,7 @@ def inscription_pro():
         # Vérifier que la spécialité existe
         specialite = Specialite.query.get(data['specialite_id'])
         if not specialite:
-            return jsonify({'error': 'Spécialité invalide'}), 40 
-        
-        #important d,avoir une adresse adresse de salon meme si on a pas de salon (elle servira d,adresse de reference dans les calculs)
-        if data.get('travail_domicile') and not data.get('adresse_salon'):
-            return jsonify({
-                'error': 'Adresse de référence requise pour travailler à domicile'
-            }), 400
+            return jsonify({'error': 'Spécialité invalide'}), 400
 
         user= User(
             email = data['email'],
@@ -107,16 +101,18 @@ def inscription_pro():
         pro= Pro(
             user_id = user.id,
             business_name=data['business_name'],
-            specialite_id=data['specialite_id']
+            specialite_id=data['specialite_id'],
+            ville = data['ville'],
+            adresse_salon = data['adresse_salon'],
+            pays = data['pays'],
+            province=data['province'] 
         )
 
         # Gestion des champs optionnels
         if 'bio' in data:
             pro.bio = data['bio']
-        if 'ville' in data:
-            pro.ville = data['ville']
-        if 'adresse_salon' in data:
-            pro.adresse_salon = data['adresse_salon']
+        if 'code_postal' in data:
+            pro.code_postal = data['code_postal']
 
         db.session.add(pro)
         db.session.commit()

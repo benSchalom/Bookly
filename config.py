@@ -27,6 +27,15 @@ class Config:
     # CORS restriction sur l'appel de mon API
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:8080').split(',')
 
+    # configuration pou email
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'mail.ser-vicescam.com')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', 465))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'False') == 'True'
+    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', 'True') == 'True'
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+
 class DevelopmentConfig(Config):
     #Configuration en mode developement
     DEBUG = True
@@ -50,3 +59,5 @@ config = {
     'testing': TestingConfig,
     'default': DevelopmentConfig
 }
+
+

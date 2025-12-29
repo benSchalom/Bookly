@@ -13,9 +13,11 @@ class Pro(db.Model):
     updated_at = db.Column(db.DateTime(timezone = True), default=lambda: datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc)) 
     
     # Adresse
-    adresse_salon = db.Column(db.String(255))
-    ville = db.Column(db.String(100), index=True)
+    adresse_salon = db.Column(db.String(255), nullable=False)
+    ville = db.Column(db.String(100),nullable=False, index=True)
     code_postal = db.Column(db.String(10))
+    pays = db.Column(db.String(10), nullable=False)
+    province = db.Column(db.String(10), nullable=False)
     latitude = db.Column(db.Numeric(10, 8))
     longitude = db.Column(db.Numeric(11, 8))
     
@@ -40,12 +42,6 @@ class Pro(db.Model):
     # Relations
     user = db.relationship('User', backref=db.backref('pro', uselist=False))
     specialite = db.relationship('Specialite', backref='pros')
-
-    def __init__(self, user_id, business_name, specialite_id):
-        #constructeur
-        self.user_id = user_id
-        self.business_name = business_name
-        self.specialite_id = specialite_id
     
     def to_dict(self): #aide au json
         return {
@@ -57,6 +53,8 @@ class Pro(db.Model):
             'adresse_salon': self.adresse_salon,
             'ville': self.ville,
             'code_postal': self.code_postal,
+            'pays': self.pays,
+            'province': self.province,
             'latitude': float(self.latitude) if self.latitude else None,
             'longitude': float(self.longitude) if self.longitude else None,
             'travail_salon': self.travail_salon,

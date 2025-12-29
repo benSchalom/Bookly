@@ -8,7 +8,7 @@ class Appointment(db.Model):
     __tablename__ = 'appointments'
 
     __table_args__ = (
-        CheckConstraint('heure_debut < heure_fin', name='check_heures_coherences'),
+        CheckConstraint('heure_debut < heure_fin', name='check_heures_coherences_appointment'),
     )
 
     id = db.Column(db.Integer, primary_key = True)

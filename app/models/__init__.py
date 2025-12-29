@@ -8,6 +8,7 @@ from .appointment import Appointment
 from .portfolio import Portfolio
 from .loyalty_account import LoyaltyAccount
 from .loyalty_history import LoyaltyHistory
+from .review import Review
 
 __all__ = [
     'User', 
@@ -19,5 +20,6 @@ __all__ = [
     'Appointment', 
     'Portfolio', 
     'LoyaltyAccount',
-    'LoyaltyHistory'
+    'LoyaltyHistory',
+    'Review'
     ]
