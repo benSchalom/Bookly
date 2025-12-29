@@ -45,7 +45,7 @@ def profil_public_pro(pro_id):
         pro = Pro.query.get(pro_id)
 
         if not pro:
-            return jsonify ({'error': 'Désolé, mais nous n\'avons aucune information sur ce professionnel'}),404
+            return jsonify ({'error': 'Aucun professionnel trouvé correspondant à votre recherche.'}),404
         
         # Info lié au compte professionnel
         infos_pro = pro.to_dict()

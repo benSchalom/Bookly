@@ -44,7 +44,7 @@ def inscription_client():
         
         #verifier si l'email existe déjà
         if User.query.filter_by(email = data['email']).first():
-            return jsonify({'error': 'Cet email est déjà utilisé'}), 400
+            return jsonify({'error': 'Cette adresse courriel est déjà utilisée.'}), 400
         
         # Validation mot de passe
         valide, erreur = validation_mot_de_passe(data['password'])
@@ -69,7 +69,7 @@ def inscription_client():
         refresh_token = create_refresh_token(identity=str(user.id))
 
         return jsonify({
-            'message': 'Compte client crée avec succès',
+            'message': 'Compte client créé avec succès.',
             'user': user.to_dict(),
             'access_token': access_token,
             'refresh_token': refresh_token
@@ -112,7 +112,7 @@ def inscription_pro():
         
         # Vérifier si l'email existe déjà
         if User.query.filter_by(email=data['email']).first():
-            return jsonify({'error': 'Cet email est déjà utilisé'}), 400
+            return jsonify({'error': 'Cette adresse courriel est déjà utilisée.'}), 400
         
         # Validation mot de passe
         valide, erreur = validation_mot_de_passe(data['password'])
@@ -122,7 +122,7 @@ def inscription_pro():
         # Vérifier que la spécialité existe
         specialite = Specialite.query.get(data['specialite_id'])
         if not specialite:
-            return jsonify({'error': 'Spécialité invalide'}), 400
+            return jsonify({'error': 'Spécialité invalide.'}), 400
 
         user= User(
             email = data['email'],
@@ -160,7 +160,7 @@ def inscription_pro():
         refresh_token = create_refresh_token(identity= str(user.id))
         
         return jsonify({
-            'message': 'Compte professionnel créé avec succès',
+            'message': 'Compte professionnel créé avec succès.',
             'user': user.to_dict(),
             'pro': pro.to_dict(),
             'access_token': access_token,
@@ -197,10 +197,10 @@ def connexion():
 
         # veifier que le user existe pus verifier le mot de passe
         if not user or not user.check_password(data['password']):
-            return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
+            return jsonify({'error': "L'adresse courriel ou le mot de passe est invalide."}), 401
         
         if not user.is_active:
-            return jsonify({'error': 'Votre compte est désactivé'}), 403
+            return jsonify({'error': 'Votre compte est désactivé.'}), 403
         
         # Mettre a jour l'info sur la derniere connexion
         user.last_login = datetime.now(timezone.utc)
@@ -211,7 +211,7 @@ def connexion():
         refresh_token = create_refresh_token(identity=str(user.id))
 
         response = {
-            'message': 'Connexion réussie',
+            'message': 'Connexion réussie.',
             'user': user.to_dict(),
             'access_token': access_token,
             'refresh_token': refresh_token
@@ -247,7 +247,7 @@ def utilisateur_actuel():
         user = User.query.get(current_user_id)
 
         if not user:
-            return jsonify({'error': 'Compte utilisateur non trouvé'}), 404
+            return jsonify({'error': 'Compte utilisateur introuvable.'}), 404
         
         response = {
             'user': user.to_dict()
@@ -319,14 +319,14 @@ def recuperation_mot_de_passe():
     try:
         data = request.get_json()
         if 'email' not in data:
-            return jsonify({'error': 'Email requis'}), 400
+            return jsonify({'error': 'Adresse courriel requise.'}), 400
         
         # chercher l'utilisateur
         user = User.query.filter_by(email=data['email']).first()
 
         # si l'utilisateur n'existe pas
         if not user:
-            return jsonify({'message': 'Si cet email existe, un lien a été envoyé'}), 200
+            return jsonify({'message': 'Si cette adresse courriel existe, un lien a été envoyé.'}), 200
         
         # Marquer anciens tokens comme utilisés
         old_tokens = PasswordResetToken.query.filter_by(user_id=user.id, used=False).all()
@@ -348,10 +348,10 @@ def recuperation_mot_de_passe():
             <p>Vous avez demandé à réinitialiser votre mot de passe.</p>
             <p>Cliquez sur ce lien (valide 30 minutes) :</p>
             <p><a href="{reset_link}">{reset_link}</a></p>
-            <p>Si vous n'avez pas demandé ceci, ignorez cet email.</p>
+            <p>Si vous n'avez pas demandé ceci, ignorez ce message.</p>
         """
 
-        envoyer_email(user.email, "Réinitialisation mot de passe - Asteur Là", html)
+        envoyer_email(user.email, "Réinitialisation mot de passe - Aster", html)
 
         db.session.commit()
 
@@ -374,23 +374,23 @@ def reset_password():
         required = ['token', 'new_password']
         for field in required:
             if field not in data:
-                return jsonify({'error': f'{field} requis'}), 400
+                return jsonify({'error': f'Veuillez renseigner le champ obligatoire : {field}'}), 400
         
         # Trouver token
         reset_token = PasswordResetToken.query.filter_by(token=data['token']).first()
         
         if not reset_token:
-            return jsonify({'error': 'Token invalide'}), 400
+            return jsonify({'error': 'Jeton (token) invalide.'}), 400
         
         # Vérifier validité
         if not reset_token.is_valid():
-            return jsonify({'error': 'Token expiré ou déjà utilisé'}), 400
+            return jsonify({'error': 'Jeton (token) expiré ou déjà utilisé.'}), 400
         
         # Récupérer user
         user = User.query.get(reset_token.user_id)
         
         if not user:
-            return jsonify({'error': 'Utilisateur non trouvé'}), 404
+            return jsonify({'error': 'Utilisateur introuvable.'}), 404
         
         # Validation nouveau mot de passe
         valide, erreur = validation_mot_de_passe(data['new_password'])
@@ -405,7 +405,7 @@ def reset_password():
         
         db.session.commit()
         
-        return jsonify({'message': 'Mot de passe réinitialisé avec succès'}), 200
+        return jsonify({'message': 'Mot de passe réinitialisé avec succès.'}), 200
         
     except Exception as e:
         db.session.rollback()

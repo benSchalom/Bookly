@@ -34,13 +34,13 @@ def creer_service():
         required_fields = ['nom', 'duree_minutes', 'prix']
         for field in required_fields:
             if field not in data:
-                return jsonify({'error': f'Le champ {field} est requis'}), 400
+                return jsonify({'error': f'Veuillez renseigner le champ obligatoire : {field}'}), 400
         
         if data['duree_minutes'] <= 0:
-            return jsonify({'error': 'La durée doit être supérieure à 0'}), 400
+            return jsonify({'error': 'La durée doit être supérieure à 0.'}), 400
         
         if data['prix'] <= 0:
-            return jsonify({'error': 'Le prix doit être supérieur à 0'}), 400
+            return jsonify({'error': 'Le prix doit être supérieur à 0.'}), 400
         
         service = Service(
             pro_id=user.pro.id,
@@ -57,7 +57,7 @@ def creer_service():
         db.session.commit()
 
         return jsonify({
-            'message': 'Service créé avec succès',
+            'message': 'Service créé avec succès.',
             'service': service.to_dict()
         }), 201
 
@@ -141,18 +141,18 @@ def modifier_service(service_id):
 
         if 'duree_minutes' in data:
             if data['duree_minutes'] <= 0:
-                return jsonify({'error': 'La durée doit être supérieure à 0'}), 400
+                return jsonify({'error': 'La durée doit être supérieure à 0.'}), 400
             service.duree_minutes = data['duree_minutes']
         if 'prix' in data:
             if data['prix'] <= 0:
-                return jsonify({'error': 'Le prix doit être supérieur à 0'}), 400
+                return jsonify({'error': 'Le prix doit être supérieur à 0.'}), 400
             service.prix = data['prix']
 
  
             db.session.commit()
 
             return jsonify({
-                'message': 'Service modifié avec succès',
+                'message': 'Service modifié avec succès.',
                 'service': service.to_dict()
             }), 200
 
@@ -192,7 +192,7 @@ def supprimer_service(service_id):
         db.session.delete(service)
         db.session.commit()
 
-        return jsonify({'message': 'Service supprimé avec succès'}), 200
+        return jsonify({'message': 'Service supprimé avec succès.'}), 200
 
     except Exception as e:
         db.session.rollback()

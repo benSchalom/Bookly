@@ -30,27 +30,27 @@ def creer_rdv():
         user =User.query.get(int(current_user_id))
         
         if not user:
-            return jsonify({'error': 'Compte innexistant'}), 401
+            return jsonify({'error': 'Compte utilisateur introuvable.'}), 401
         
         data = request.get_json()
 
         required_fields = ['pro_id', 'service_id', 'date', 'heure_debut', 'type_rdv']
         for field in required_fields:
             if field not in data:
-                return jsonify({'error': f'Le champ {field} est requis'}), 400
+                return jsonify({'error': f'Veuillez renseigner le champ obligatoire : {field}'}), 400
             
         # verification de l'existence du service
         service = Service.query.filter_by(id = data['service_id'], pro_id = data['pro_id']).first()
 
         if not service:
-            return jsonify({'error': 'ce service est indisponoble chez ce professionnel'}), 400
+            return jsonify({'error': 'Ce service est indisponible ou non offert par ce professionnel.'}), 400
         
         # Vérifier que le service est disponible pour ce type
         if data['type_rdv'] == 'Salon' and not service.disponible_salon:
-            return jsonify({'error': 'Ce service n\'est pas disponible au salon'}), 400
+            return jsonify({'error': "Ce service n'est pas offert au salon."}), 400
 
         if data['type_rdv'] == 'Domicile' and not service.disponible_domicile:
-            return jsonify({'error': 'Ce service n\'est pas disponible à domicile'}), 400
+            return jsonify({'error': "Ce service n'est pas offert à domicile."}), 400
 
         # Determination de l'heure de fin
         date_rdv = datetime.strptime(data['date'], '%Y-%m-%d').date()
@@ -73,10 +73,10 @@ def creer_rdv():
         availability = availability_query.first()
 
         if not availability:
-            return jsonify({'error': 'Professionnel non disponible ce jour'}), 400
+            return jsonify({'error': 'Le professionnel est indisponible ce jour-là.'}), 400
         
         if heure_debut < availability.heure_debut or heure_fin > availability.heure_fin:
-            return jsonify({'error': 'Cette plage horaire est indisponible'}), 400
+            return jsonify({'error': 'Cette plage horaire est en dehors des heures de disponibilité.'}), 400
         
         # Verifier si le professionnel n'a pas definis un time_blok sur cette periode
         block = TimeBlock.query.filter(
@@ -86,8 +86,8 @@ def creer_rdv():
         ).first()
 
         if block:
-            raison_msg = f" (Raison: {block.raison})" if block.raison else ""
-            return jsonify({'error': f'Professionnel indisponible. {raison_msg}'}), 400
+            raison_msg = f" (Motif : {block.raison})" if block.raison else ""
+            return jsonify({'error': f'Le professionnel est indisponible sur cette période.{raison_msg}'}), 400
         
         # Verifier si aucun autre rendez vous n'entre en conflit avec cette reservation
         conflit = Appointment.query.filter(
@@ -99,7 +99,7 @@ def creer_rdv():
         ).first()
 
         if conflit:
-            return jsonify({'error': 'Ce créneau est déja réservé'}), 400
+            return jsonify({'error': 'Cette plage horaire est déjà réservée.'}), 400
         
         # calcul du prix
         prix_total = service.prix
@@ -129,7 +129,7 @@ def creer_rdv():
         envoyer_confirmation_rdv(appointment)
 
         return jsonify({
-            'message': 'Reservation crée avec succès',
+            'message': 'Rendez-vous confirmé avec succès.',
             'reservation': appointment.to_dict()
         }), 201
 
@@ -150,7 +150,7 @@ def lister_rdv():
     user =User.query.get(int(current_user_id))
     
     if not user:
-        return jsonify({'error': 'Compte innexistant'}), 401
+        return jsonify({'error': 'Compte utilisateur introuvable.'}), 401
     
     if user.role == 'client':
         query = Appointment.query.filter_by(client_id=user.id).order_by(
@@ -159,7 +159,7 @@ def lister_rdv():
         )
     elif user.role == 'pro':
         if not user.pro:
-            return jsonify({'error': 'Vous ne pouvez pas avoir accès a cette information'}), 404
+            return jsonify({'error': 'Profil professionnel introuvable.'}), 404
         query = Appointment.query.filter_by(pro_id=user.pro.id).order_by(
             Appointment.date.desc(), 
             Appointment.heure_debut.desc()
@@ -193,15 +193,15 @@ def details_rdv(appointment_id):
     appointment = Appointment.query.get(int(appointment_id))
 
     if not appointment:
-        return jsonify({'error': 'Desolé, mais aucune information concernant ce rendez vous n\'a été trouvé'}), 404
+        return jsonify({'error': 'Aucune information trouvée pour ce rendez-vous.'}), 404
     
     # verification des droits d'acces aux informations du rendez vous
     if user.role == 'client' and appointment.client_id != user.id:
-        return jsonify({'error': 'Accès non autorisé'}), 403
+        return jsonify({'error': 'Accès non autorisé.'}), 403
 
     if user.role == 'pro':
         if not user.pro or appointment.pro_id != user.pro.id:
-            return jsonify({'error': 'Accès non autorisé'}), 403
+            return jsonify({'error': 'Accès non autorisé.'}), 403
     
     return jsonify(appointment.to_dict()), 200 
 
@@ -221,15 +221,15 @@ def modifier_rdv(appointment_id):
         appointment = Appointment.query.get(int(appointment_id))
 
         if not appointment:
-            return jsonify({'error': 'Desolé, mais aucune information concernant ce rendez vous n\'a été trouvé'}), 404
+            return jsonify({'error': 'Aucune information trouvée pour ce rendez-vous.'}), 404
         
         # verification des droits d'acces aux informations du rendez vous
         if user.role == 'client' and appointment.client_id != user.id:
-            return jsonify({'error': 'Accès non autorisé'}), 403
+            return jsonify({'error': 'Accès non autorisé.'}), 403
 
         if user.role == 'pro':
             if not user.pro or appointment.pro_id != user.pro.id:
-                return jsonify({'error': 'Accès non autorisé'}), 403
+                return jsonify({'error': 'Accès non autorisé.'}), 403
         
         # Recuperer les nouvelles donnees a partir du formulaire
         data = request.get_json()
@@ -238,7 +238,7 @@ def modifier_rdv(appointment_id):
         # Dans le cadre de la modification, un client peut juste faire une annulation 
         if user.role == 'client':
             if nouveau_statut != 'Annuler':
-                return jsonify({'error': 'Vous ne pouvez pas effectué cette opération'}), 403
+                return jsonify({'error': 'Vous ne pouvez pas effectuer cette opération.'}), 403
         
         if user.role == 'pro':
             # declarattion des differentes transition de statut valide
@@ -250,7 +250,7 @@ def modifier_rdv(appointment_id):
             }
         
             if nouveau_statut not in transitions_valides[appointment.statut]:
-                return jsonify({'error': 'Changement de statut invalide'}), 400
+                return jsonify({'error': 'Changement de statut invalide.'}), 400
         
         # en cas d'annulation de rendez vous
         if nouveau_statut == 'Annuler':
@@ -308,7 +308,7 @@ def modifier_rdv(appointment_id):
                 pro_id = appointment.pro_id,
                 appointment_id = appointment_id,
                 points_change = service.points_fidelite,
-                raison = f'Rendez vous terminé- {service.nom}'
+                raison = f'Rendez-vous terminé - {service.nom}'
             )
 
             db.session.add(loyaltyHistory)
@@ -318,7 +318,7 @@ def modifier_rdv(appointment_id):
         db.session.commit()
 
         return jsonify({
-            'message': 'Rendez vous modifié avec succès',
+            'message': 'Rendez-vous modifié avec succès.',
             'Rendez vous': appointment.to_dict()
         }), 200
     

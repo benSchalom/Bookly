@@ -119,7 +119,7 @@ def test_time_blocks_interaction(client, management_setup):
         'type_rdv': 'Salon'
     }, headers={'Authorization': f'Bearer {c_token}'})
     assert resp.status_code == 400
-    assert 'Professionnel indisponible' in resp.get_json()['error']
+    assert 'Le professionnel est indisponible sur cette période.' in resp.get_json()['error']
     
     # 3. Delete TimeBlock
     client.delete(f'/api/pros/time-blocks/{block_id}', headers={'Authorization': f'Bearer {p_token}'})

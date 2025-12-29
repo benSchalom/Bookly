@@ -16,10 +16,10 @@ def lister_comptes_loyalty():
         user =User.query.get(int(current_user_id))
         
         if not user:
-            return jsonify({'error':'Désolé, mais vous devez être connecté pour acceder à cet infomation'}),401
+            return jsonify({'error': 'Compte utilisateur introuvable.'}), 401
 
         if user.role != 'client':
-            return jsonify({'error': 'Cette information est reservé au client'}), 403
+            return jsonify({'error': 'Cette fonctionnalité est réservée aux clients.'}), 403
         
         # Recuperation de tous les comptes de fidelité du client peu importe le pro
         comptes_fidelites = LoyaltyAccount.query.filter_by(client_id = user.id).all()
@@ -43,10 +43,10 @@ def lister_historque(pro_id):
         user =User.query.get(int(current_user_id))
         
         if not user:
-            return jsonify({'error':'Désolé, mais vous devez être connecté pour acceder à cet infomation'}),401
+            return jsonify({'error': 'Compte utilisateur introuvable.'}), 401
 
         if user.role != 'client':
-            return jsonify({'error': 'Cette information est reservé au client'}), 403
+            return jsonify({'error': 'Cette fonctionnalité est réservée aux clients.'}), 403
         
         history = LoyaltyHistory.query.filter_by(client_id = user.id, pro_id = pro_id).order_by(LoyaltyHistory.created_at.desc()).all()
 

@@ -35,18 +35,18 @@ def creer_blocage():
         required_fields = ['date_debut', 'date_fin']
         for field in required_fields:
             if field not in data:
-                return jsonify({'error': f'Le champ {field} est requis'}), 400
+                return jsonify({'error': f'Veuillez renseigner le champ obligatoire : {field}'}), 400
         
         # Convertir les dates ISO en datetime
         try:
             date_debut = datetime.fromisoformat(data['date_debut'].replace('Z', '+00:00'))
             date_fin = datetime.fromisoformat(data['date_fin'].replace('Z', '+00:00'))
         except ValueError:
-            return jsonify({'error': 'Format de date invalide. Utiliser ISO 8601 (ex: 2025-12-24T00:00:00)'}), 400
+            return jsonify({'error': 'Format de date invalide. Utilisez le format ISO 8601 (ex : 2025-12-24T00:00:00).'}), 400
         
         # Valider date_debut < date_fin
         if date_debut >= date_fin:
-            return jsonify({'error': 'La date de début doit être avant la date de fin'}), 400
+            return jsonify({'error': 'La date de début doit être antérieure à la date de fin.'}), 400
         
         # Créer le blocage
         time_block = TimeBlock(
@@ -60,7 +60,7 @@ def creer_blocage():
         db.session.commit()
         
         return jsonify({
-            'message': 'Blocage créé avec succès',
+            'message': 'Blocage créé avec succès.',
             'time_block': time_block.to_dict()
         }), 201
     
@@ -128,16 +128,16 @@ def supprimer_blocage(block_id):
         time_block = TimeBlock.query.get(block_id)
         
         if not time_block:
-            return jsonify({'error': 'Blocage inexistant'}), 404
+            return jsonify({'error': 'Blocage introuvable.'}), 404
         
         # Vérifier si le blocage appartient au pro
         if time_block.pro_id != user.pro.id:
-            return jsonify({'error': 'Vous n\'avez pas les droits nécessaires pour effectuer cette opération'}), 403
+            return jsonify({'error': 'Vous n\'avez pas les permissions requises pour effectuer cette action.'}), 403
         
         db.session.delete(time_block)
         db.session.commit()
         
-        return jsonify({'message': 'Blocage supprimé avec succès'}), 200
+        return jsonify({'message': 'Blocage supprimé avec succès.'}), 200
     
     except Exception as e:
         db.session.rollback()

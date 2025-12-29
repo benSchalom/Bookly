@@ -63,7 +63,7 @@ def test_login(client):
     assert response.status_code == 200
     data = response.get_json()
     assert 'access_token' in data
-    assert data['message'] == 'Connexion réussie'
+    assert data['message'] == 'Connexion réussie.'
 
     # Test login failure
     response_fail = client.post('/api/auth/connexion', json={

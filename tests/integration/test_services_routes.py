@@ -61,7 +61,7 @@ def test_service_crud_lifecycle(client, pro_auth_headers):
     # 4. Delete Service
     delete_resp = client.delete(f'/api/pros/services/{service_id}', headers=pro_auth_headers)
     assert delete_resp.status_code == 200
-    assert delete_resp.get_json()['message'] == 'Service supprimé avec succès'
+    assert delete_resp.get_json()['message'] == 'Service supprimé avec succès.'
 
     # Verify Deletion
     get_again = client.get('/api/pros/services', headers=pro_auth_headers)

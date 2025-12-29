@@ -19,10 +19,10 @@ def stats_pros():
         user =User.query.get(int(current_user_id))
         
         if not user or user.role != 'pro':
-            return jsonify({'error': 'Réservé aux professionnels'}), 403
+            return jsonify({'error': 'Cette fonctionnalité est réservée aux comptes professionnels.'}), 403
         
         if not user.pro:
-            return jsonify({'error': 'Profil professionnel non trouvé'}), 404
+            return jsonify({'error': 'Profil professionnel introuvable.'}), 404
         
         # calcul du nombre total de rendez vous
         total_rdv = Appointment.query.filter_by(pro_id=user.pro.id).count()
@@ -61,7 +61,7 @@ def stats_clients():
         user =User.query.get(int(current_user_id))
         
         if not user or user.role != 'client':
-            return jsonify({'error': 'Vous devez être connecté en tant que client'}), 403
+            return jsonify({'error': 'Cette fonctionnalité est réservée aux clients.'}), 403
     
         # Nombre total de rendez vous
         total_rdv = Appointment.query.filter_by(client_id=user.id).count()

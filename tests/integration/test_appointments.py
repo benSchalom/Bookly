@@ -113,4 +113,4 @@ def test_appointment_unavailable_time(client, booking_data):
     }, headers=headers)
 
     assert response.status_code == 400
-    assert 'non disponible' in response.get_json()['error']
+    assert 'Le professionnel est indisponible ce jour-là.' in response.get_json()['error']

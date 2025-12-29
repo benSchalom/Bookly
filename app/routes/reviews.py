@@ -18,42 +18,42 @@ def creer_avis():
         user =User.query.get(int(current_user_id))
         
         if not user:
-            return jsonify({'error': 'Compte innexistant'}), 401
+            return jsonify({'error': 'Compte utilisateur introuvable.'}), 401
         
         if user.role != 'client':
-            return jsonify({'error': 'Désolé, mais vous n\'avez pas les droits necessaires pour effectuer cette opération'}), 403
+            return jsonify({'error': 'Cette fonctionnalité est réservée aux clients.'}), 403
         
         data = request.get_json()
 
         required_fields = ['pro_id', 'rating']
         for field in required_fields:
             if field not in data:
-                return jsonify({'error': f'Le champ {field} est requis'}), 400
+                return jsonify({'error': f'Veuillez renseigner le champ obligatoire : {field}'}), 400
         
         # validation de la note sur 5 
         if data['rating']< 1 or data['rating'] >5 :
-            return jsonify({'error': 'La note doit être entre 1 et 5'}), 400
+            return jsonify({'error': 'La note doit être comprise entre 1 et 5.'}), 400
         
         # dans le cas ou il s'agit d'un avis specifique a un rdv
         if 'appointment_id' in data and data['appointment_id']:
             appointment = Appointment.query.get(data['appointment_id'])
             # Verifier si le rendez vous appartient au client
             if appointment.client_id != user.id:
-                return jsonify({'error': 'Désolé, mais vous n\'avez pas les autorisations necessaires pour faire cette opération'}), 403
+                return jsonify({'error': 'Vous n\'avez pas les permissions requises pour effectuer cette action.'}), 403
 
             if appointment.statut != 'Terminer':
-                return jsonify({'error': 'Désolé, mais vous ne pouvew pas donné votre avis sur le rendez vous n\'est pas encore terminer'}), 400
+                return jsonify({'error': 'Vous ne pouvez pas évaluer un rendez-vous qui n\'est pas encore terminé.'}), 400
             
             # Verifier doublon par appointment
             existing = Review.query.filter_by(appointment_id=data['appointment_id']).first()
             if existing:
-                 return jsonify({'error': 'Vous avez déja publié un avis pour ce rendez-vous'}), 400
+                 return jsonify({'error': 'Vous avez déjà soumis une évaluation pour ce rendez-vous.'}), 400
 
         else:
             # Review generale (pas liee a un RDV) - Verifier si existe deja pour ce pro
             existing = Review.query.filter_by(client_id=user.id, pro_id=data['pro_id'], appointment_id=None).first()
             if existing:
-                 return jsonify({'error': 'Vous avez déja publié un avis pour ce professionnel'}), 400
+                 return jsonify({'error': 'Vous avez déjà soumis une évaluation pour ce professionnel.'}), 400
         
         pro = Pro.query.get(data['pro_id'])
 
@@ -74,7 +74,7 @@ def creer_avis():
         db.session.commit()
 
         return jsonify({
-            'message': 'Avis créé avec succès',
+            'message': 'Avis publié avec succès.',
             'review': review.to_dict()
         }), 201
 

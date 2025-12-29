@@ -32,14 +32,14 @@ def creer_horaire():
         required_fields = ['jour_semaine', 'heure_debut', 'heure_fin']
         for field in required_fields:
             if field not in data:
-                return jsonify({'error': f'Le champ {field} est requis'}), 400
+                return jsonify({'error': f'Veuillez renseigner le champ obligatoire : {field}'}), 400
         
         if data['jour_semaine'] < 0 or data['jour_semaine'] > 6:
-            return jsonify({'error': 'Le jour de la semaine n\'est pas valide'}), 400
+            return jsonify({'error': 'Le jour de la semaine sélectionné est invalide.'}), 400
         
         
         if datetime.strptime(data['heure_fin'], '%H:%M').time() < datetime.strptime(data['heure_debut'], '%H:%M').time():
-            return jsonify({'error': 'L\'heure de début ne peut être supérieure a l\'heure de la fin'}), 400
+            return jsonify({'error': "L'heure de début doit être antérieure à l'heure de fin."}), 400
         
         doublon = Availability.query.filter_by(
             pro_id=user.pro.id,
@@ -47,7 +47,7 @@ def creer_horaire():
         ).first()
 
         if doublon:
-            return jsonify({'error': 'Horaire déjà défini pour ce jour'}), 400
+            return jsonify({'error': 'Un horaire est déjà défini pour ce jour.'}), 400
 
         availability = Availability(
             pro_id=user.pro.id,
@@ -60,7 +60,7 @@ def creer_horaire():
         db.session.commit()
 
         return jsonify({
-            'message': 'Disponibilité créé avec succès',
+            'message': 'Disponibilité ajoutée avec succès.',
             'availability': availability.to_dict()
         }), 201
 
@@ -138,12 +138,12 @@ def modifier_horaire(availability_id) :
             availability.is_active = data['is_active']
 
         if availability.heure_debut >= availability.heure_fin:
-            return jsonify({'error': 'L\'heure de début doit être avant l\'heure de fin'}), 400
+            return jsonify({'error': "L'heure de début doit être antérieure à l'heure de fin."}), 400
 
         db.session.commit()
 
         return jsonify({
-            'message': 'Disponibilité modifié avec succès',
+            'message': 'Disponibilité modifiée avec succès.',
             'availability': availability.to_dict()
         }), 200
 
@@ -184,7 +184,7 @@ def supprimer_horaire(availability_id):
         db.session.delete(availability)
         db.session.commit()
 
-        return jsonify({'message': 'Disponibilité supprimé avec succès'}), 200
+        return jsonify({'message': 'Disponibilité supprimée avec succès.'}), 200
 
     except Exception as e:
         db.session.rollback()

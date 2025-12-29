@@ -28,13 +28,13 @@ def ajouter_image():
 
         # Limitation du nombre de photo par pro vu que je suis en mode gratuit
         if nombre_images >=10:
-            return jsonify({'error': 'Désolé, mais vous avez atteint votre limite de 10 photos sur votre portfolio'}), 400
+            return jsonify({'error': 'La limite de 10 images par portfolio a été atteinte.'}), 400
 
         data = request.get_json()
 
         #Verifier si on a une image dans le formulaire
         if 'image_url' not in data:
-            return jsonify({'error': 'Désolé, mais il manque l\'image à ajouter au portfolio'}), 400
+            return jsonify({'error': "Veuillez fournir une image pour le portfolio."}), 400
         
         # creation du portfolio
         portfolio = Portfolio( 
@@ -48,7 +48,7 @@ def ajouter_image():
         db.session.commit()
 
         return jsonify({
-            'message': 'Portfolio créé avec succès',
+            'message': 'Portfolio mis à jour avec succès.',
             'Portfolio': portfolio.to_dict()
         }), 201
 
@@ -99,17 +99,17 @@ def supprimer_image(image_id):
         image = Portfolio.query.get(image_id)
 
         if not image:
-            return jsonify ({'error': 'Désolé, vous ne pouvez pas effectué cette opération car l\'image n\existe pas'}), 404
+            return jsonify ({'error': 'Image introuvable.'}), 404
         
         # verifiert si l'image appartient au pro
         if user.pro.id != image.pro_id:
-            return jsonify ({'error': 'Vous n\'avez pas les autorisations pour effectuer cette opération'}), 403
+            return jsonify ({'error': "Vous n'avez pas les permissions requises pour effectuer cette action."}), 403
 
         db.session.delete(image)
         db.session.commit()
 
         return jsonify({
-            'message': 'Image supprimé avec succès',
+            'message': 'Image supprimée avec succès.',
         }), 200
     except Exception as e:
         db.session.rollback()

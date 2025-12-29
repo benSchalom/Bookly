@@ -62,7 +62,7 @@ def test_reviews_lifecycle(client, social_setup):
         'commentaire': 'Again?'
     }, headers=headers)
     assert resp.status_code == 400
-    assert 'déja publié un avis' in resp.get_json()['error']
+    assert 'Vous avez déjà soumis une évaluation pour ce professionnel.' in resp.get_json()['error']
     
     # 3. List Reviews for Pro
     resp = client.get(f'/api/pros/{pro_id}/reviews') # Public endpoint usually
