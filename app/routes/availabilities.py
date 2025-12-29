@@ -4,7 +4,6 @@ from app import db
 from app.models.user import User
 from app.models.availability import Availability
 from datetime import datetime
-
 availabilities_bp = Blueprint('dispo', __name__)
 
 
@@ -35,6 +34,7 @@ def creer_horaire():
         
         if data['jour_semaine'] < 0 or data['jour_semaine'] > 6:
             return jsonify({'error': 'Le jour de la semaine n\'est pas valide'}), 400
+        
         
         if datetime.strptime(data['heure_fin'], '%H:%M').time() < datetime.strptime(data['heure_debut'], '%H:%M').time():
             return jsonify({'error': 'L\'heure de début ne peut être supérieure a l\'heure de la fin'}), 400

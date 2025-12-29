@@ -1,5 +1,5 @@
 # Routes Auth pour Authentification
-
+from app.services.validators import validation_email, validation_phone
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 from app import db
@@ -25,6 +25,16 @@ def inscription_client():
         for field in required_fields:
             if field not in data:
                 return jsonify({'error': f'Le champ {field} est requis'}), 400
+            
+        # Validation email
+        valide, erreur = validation_email(data['email'])
+        if not valide:
+            return jsonify({'error': erreur}), 400
+
+        # Validation téléphone
+        valide, erreur = validation_phone(data['telephone'])
+        if not valide:
+            return jsonify({'error': erreur}), 400
         
         #verifier si l'email existe déjà
         if User.query.filter_by(email = data['email']).first():
@@ -77,6 +87,16 @@ def inscription_pro():
             if field not in data:
                 return jsonify({'error': f'Le champ {field} est requis'}), 400
 
+        # Validation email
+        valide, erreur = validation_email(data['email'])
+        if not valide:
+            return jsonify({'error': erreur}), 400
+
+        # Validation téléphone
+        valide, erreur = validation_phone(data['telephone'])
+        if not valide:
+            return jsonify({'error': erreur}), 400
+        
         # Vérifier si l'email existe déjà
         if User.query.filter_by(email=data['email']).first():
             return jsonify({'error': 'Cet email est déjà utilisé'}), 400
