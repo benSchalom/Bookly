@@ -12,6 +12,7 @@ from app.models.appointment import Appointment
 from datetime import datetime, timedelta, timezone
 from app.services.email import envoyer_confirmation_rdv, envoyer_rappel_rdv, envoyer_annulation_rdv
 from app.services.logger import logger
+from app.services.pagination import paginate
 
 appointments_bp = Blueprint('rendez-vous', __name__ )
 
@@ -147,28 +148,30 @@ def lister_rdv():
         return jsonify({'error': 'Compte innexistant'}), 401
     
     if user.role == 'client':
-        appointments = Appointment.query.filter_by(client_id = user.id).order_by(Appointment.date.desc(), Appointment.heure_debut.desc()).all()
+        query = Appointment.query.filter_by(client_id=user.id).order_by(
+            Appointment.date.desc(), 
+            Appointment.heure_debut.desc()
+        )
     elif user.role == 'pro':
         if not user.pro:
             return jsonify({'error': 'Vous ne pouvez pas avoir accès a cette information'}), 404
-        
-        appointments = Appointment.query.filter_by(pro_id=user.pro.id).order_by(Appointment.date.desc(), Appointment.heure_debut.desc()).all()
+        query = Appointment.query.filter_by(pro_id=user.pro.id).order_by(
+            Appointment.date.desc(), 
+            Appointment.heure_debut.desc()
+        )
 
-    # Conversion du resulat en liste 
-    rdv_list = [rdv.to_dict() for rdv in appointments]
+    result = paginate(query)
 
+    # Ajouter flag alerte pour pro
     if user.role == 'pro':
-        for rdv in rdv_list :
-            # Récupérer loyalty account du client
+        for rdv in result['items']:
             loyalty = LoyaltyAccount.query.filter_by(
                 client_id=rdv['client_id'],
                 pro_id=user.pro.id
             ).first()
-            
-            # Ajouter flag alerte
             rdv['client_alerte_annulation'] = loyalty.late_cancellation_count >= 3 if loyalty else False
 
-    return jsonify({'appointments': rdv_list}), 200
+    return jsonify(result), 200
 
 #===============================
 # Consulter un rendez vous

@@ -5,6 +5,7 @@ from app.models.service import Service
 from app.models.portfolio import Portfolio
 from app.models.review import Review
 from app.models.availability import Availability
+from app.services.pagination import paginate
 from app import db
 
 search_bp = Blueprint('search', __name__)
@@ -30,17 +31,9 @@ def rechercher_pros():
         if business_name:
             requete = requete.filter(Pro.business_name.ilike(f'%{business_name}%')).order_by(Pro.business_name.asc())
 
-        pros = requete.limit(50).all()
+        result = paginate(requete)
+        return jsonify(result), 200
 
-        liste_pros = [pro.to_dict() for pro in pros]
-
-
-        return jsonify({
-            'pros': liste_pros,
-            'count': len(liste_pros),
-            'max_results': 50
-        })
-    
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
@@ -70,7 +63,10 @@ def profil_public_pro(pro_id):
         liste_avis = [a.to_dict() for a in avis_pro]
 
         # Disponibilité du pro
-        disponibilites_pro = Availability.query.filter_by(pro_id = pro_id, is_active = True).order_by(Availability.jour_semaine).all()
+        disponibilites_pro = Availability.query.filter_by(
+            pro_id=pro_id, 
+            is_active=True
+        ).order_by(Availability.jour_semaine).all()
         liste_disponibilites = [d.to_dict() for d in disponibilites_pro]
 
         return jsonify({
@@ -80,7 +76,6 @@ def profil_public_pro(pro_id):
             'Avis': liste_avis,
             'Disponibilites': liste_disponibilites
         }), 200
-
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
