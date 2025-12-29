@@ -155,6 +155,17 @@ def lister_rdv():
     # Conversion du resulat en liste 
     rdv_list = [rdv.to_dict() for rdv in appointments]
 
+    if user.role == 'pro':
+        for rdv in rdv_list :
+            # Récupérer loyalty account du client
+            loyalty = LoyaltyAccount.query.filter_by(
+                client_id=rdv['client_id'],
+                pro_id=user.pro.id
+            ).first()
+            
+            # Ajouter flag alerte
+            rdv['client_alerte_annulation'] = loyalty.late_cancellation_count >= 3 if loyalty else False
+
     return jsonify({'appointments': rdv_list}), 200
 
 #===============================
@@ -242,9 +253,26 @@ def modifier_rdv(appointment_id):
         now = datetime.now(timezone.utc)
         rdv_datetime = datetime.combine(appointment.date, appointment.heure_debut, tzinfo=timezone.utc)   
 
-        if rdv_datetime - now < timedelta(hours=24):
+        if rdv_datetime - now < timedelta(hours=2):
             appointment.is_late_cancellation = True
-    
+            loyalty = LoyaltyAccount.query.filter_by(
+                client_id=appointment.client_id,
+                pro_id=appointment.pro_id
+            ).first()
+
+            if loyalty:
+                loyalty.late_cancellation_count += 1
+                loyalty.last_late_cancellation = datetime.now(timezone.utc)
+            else:
+                # Créer compte si existe pas
+                loyalty = LoyaltyAccount(
+                    client_id=appointment.client_id,
+                    pro_id=appointment.pro_id,
+                    late_cancellation_count=1,
+                    last_late_cancellation=datetime.now(timezone.utc)
+                )
+                db.session.add(loyalty)
+                
     # Mise a jour des points de fidelite
     if nouveau_statut  == 'Terminer' and appointment.statut!= 'Terminer':
         loyaltyAccount = LoyaltyAccount.query.filter_by(client_id =appointment.client_id, pro_id = appointment.pro_id).first()

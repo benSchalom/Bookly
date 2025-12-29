@@ -30,6 +30,7 @@ class LoyaltyAccount(db.Model):
             'points_total': self.points_total,
             'late_cancellation_count': self.late_cancellation_count,
             'last_late_cancellation': self.last_late_cancellation.isoformat() if self.last_late_cancellation else None,
+            'alerte_annulations': self.late_cancellation_count >= 3,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
