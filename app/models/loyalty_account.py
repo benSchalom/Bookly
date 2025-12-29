@@ -27,6 +27,7 @@ class LoyaltyAccount(db.Model):
             'id': self.id,
             'client_id': self.client_id,
             'pro_id': self.pro_id,
+            'business_name': self.pro.business_name if self.pro else None,
             'points_total': self.points_total,
             'late_cancellation_count': self.late_cancellation_count,
             'last_late_cancellation': self.last_late_cancellation.isoformat() if self.last_late_cancellation else None,

@@ -44,6 +44,6 @@ def create_app(config_name='development'):
     # Route de santé
     @app.route('/health')
     def health():
-        return {'status': 'ok', 'message': 'Bookly API is running'}, 200
+        return {'status': 'ok', 'message': 'Aster API is running'}, 200
     
     return app

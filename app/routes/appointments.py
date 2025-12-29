@@ -61,11 +61,16 @@ def creer_rdv():
 
         # Verification de la disponibilite du pro
         jour_semaine = date_rdv.weekday()
-        availability = Availability.query.filter_by(
+        availability_query = Availability.query.filter_by(
             pro_id = data['pro_id'],
             jour_semaine = jour_semaine,
             is_active = True
-        ).first()
+        )
+        
+        if db.engine.name != 'sqlite':
+            availability_query = availability_query.with_for_update()
+            
+        availability = availability_query.first()
 
         if not availability:
             return jsonify({'error': 'Professionnel non disponible ce jour'}), 400

@@ -43,6 +43,17 @@ def creer_avis():
 
             if appointment.statut != 'Terminer':
                 return jsonify({'error': 'Désolé, mais vous ne pouvew pas donné votre avis sur le rendez vous n\'est pas encore terminer'}), 400
+            
+            # Verifier doublon par appointment
+            existing = Review.query.filter_by(appointment_id=data['appointment_id']).first()
+            if existing:
+                 return jsonify({'error': 'Vous avez déja publié un avis pour ce rendez-vous'}), 400
+
+        else:
+            # Review generale (pas liee a un RDV) - Verifier si existe deja pour ce pro
+            existing = Review.query.filter_by(client_id=user.id, pro_id=data['pro_id'], appointment_id=None).first()
+            if existing:
+                 return jsonify({'error': 'Vous avez déja publié un avis pour ce professionnel'}), 400
         
         pro = Pro.query.get(data['pro_id'])
 

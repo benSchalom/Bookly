@@ -11,7 +11,7 @@ if __name__ == '__main__':
     port = int(os.getenv('FLASK_PORT', 5000))
     debug = os.getenv('DEBUG', 'True') == 'True'
     
-    print(f"Bookly API on http://{host}:{port}")
+    print(f"Aster API on http://{host}:{port}")
     print(f"Environment: {config_name}")
     print(f"Debug mode: {debug}")
     
