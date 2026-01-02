@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models.user import User
@@ -13,6 +13,8 @@ from datetime import datetime, timedelta, timezone
 from app.services.email import envoyer_confirmation_rdv, envoyer_rappel_rdv, envoyer_annulation_rdv
 from app.services.logger import logger
 from app.services.pagination import paginate
+from app.services.geocoding import geocoder_adresse, calculer_distance
+
 
 appointments_bp = Blueprint('rendez-vous', __name__ )
 
@@ -67,8 +69,8 @@ def creer_rdv():
             is_active = True
         )
         
-        if db.engine.name != 'sqlite':
-            availability_query = availability_query.with_for_update()
+        #if db.engine.name != 'sqlite':
+            #availability_query = availability_query.with_for_update()
             
         availability = availability_query.first()
 
@@ -103,10 +105,33 @@ def creer_rdv():
         
         # calcul du prix
         prix_total = service.prix
+        prix_deplacement = 0
+        distance_km = None
 
-        if data['type_rdv'] == 'Domicile' and data.get('distance_km'):
-            # Logique frais déplacement (V2)
-            pass
+        if data['type_rdv'] == 'Domicile':
+            if 'adresse_domicile' not in data:
+                return jsonify({'error': 'L\'adresse de votre domicile est requise pour ce type de rendez-vous'}), 400
+
+            lat_client, lng_client = geocoder_adresse(data['adresse_domicile'])
+
+            if not lat_client or not lng_client:
+                return jsonify({'error': 'Votre adresse est introuvable'}), 400
+            
+            pro = Pro.query.get(data['pro_id'])
+            if not pro.latitude or not pro.longitude:
+                return jsonify({'error': 'L\'adresse du professionnel n\'existe pas'}), 500
+            
+            distance_km = calculer_distance(
+                pro.latitude, pro.longitude,
+                lat_client, lng_client
+            )
+
+            if distance_km > pro.distance_max_km:
+                return jsonify({'error': f'Vous êtes trop éloigné. La distance maximale est de: {pro.distance_max_km}km'}), 400
+
+            tarif_km = current_app.config.get('TARIF_DEPLACEMENT_PAR_KM', 1.50)
+            prix_deplacement = round(distance_km * 2 * tarif_km, 2)
+            prix_total += prix_deplacement
 
         appointment = Appointment(
             client_id=user.id,
@@ -117,9 +142,10 @@ def creer_rdv():
             heure_fin=heure_fin,
             type_rdv=data['type_rdv'],
             prix_total=prix_total,
+            prix_deplacement=prix_deplacement,
+            distance_km=distance_km,
             notes_client=data.get('notes_client'),
-            adresse_domicile=data.get('adresse_domicile') if data['type_rdv'] == 'Domicile' else None,
-            distance_km=data.get('distance_km')
+            adresse_domicile=data.get('adresse_domicile') if data['type_rdv'] == 'Domicile' else None
         )
 
 

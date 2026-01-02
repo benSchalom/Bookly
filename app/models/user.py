@@ -11,7 +11,7 @@ class User (db.Model):
     role = db.Column(db.Enum('client', 'pro', name='user_role'), nullable = False)
     nom = db.Column(db.String(100), nullable =False)
     prenom = db.Column (db.String(100), nullable = False)
-    telephone = db.Column(db.String(100), nullable =False)
+    telephone = db.Column(db.String(100), nullable =False, unique = True, index =True)
     photo_url= db.Column(db.String(255))
     
     created_at = db.Column(db.DateTime(timezone = True), default=lambda: datetime.now(timezone.utc))
@@ -19,6 +19,9 @@ class User (db.Model):
     last_login = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True, index=True)
     email_verified = db.Column(db.Boolean, default=False)
+    verification_code = db.Column(db.Integer, nullable=True)
+    code_expires_at = db.Column(db.DateTime, nullable=True)
+    verification_attempts = db.Column(db.Integer, default=0)
 
 
     def __init__(self, email, password, role, nom, prenom, telephone):

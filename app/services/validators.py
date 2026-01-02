@@ -33,7 +33,7 @@ def validation_phone(phone):
 
 def validation_mot_de_passe(password):
     # taille superieur a 8
-    if len(password) < 12:
+    if len(password) < 8:
         return False, "Le mot de passe doit contenir au moins 8 caractères"
     
     # Au moins une majuscule

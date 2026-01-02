@@ -26,6 +26,7 @@ class Appointment(db.Model):
     notes_pro = db.Column(db.Text, nullable=True)
     adresse_domicile = db.Column(db.String(255), nullable=True)
     distance_km = db.Column(db.Numeric(10, 2), nullable=True)
+    prix_deplacement = db.Column(db.Numeric(10, 2), default = 0)
     prix_total = db.Column(db.Numeric(10, 2), nullable=False)
     cancelled_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     cancelled_at = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -61,6 +62,7 @@ class Appointment(db.Model):
             'type_rdv': self.type_rdv,
             'statut': self.statut,
             'prix_total': float(self.prix_total) if self.prix_total else None,
+            'prix_deplacement':float(self.prix_deplacement) if self.prix_deplacement else None,
             'adresse_domicile': self.adresse_domicile,
             'distance_km': float(self.distance_km) if self.distance_km else None,
             'cancelled_by': self.cancelled_by,

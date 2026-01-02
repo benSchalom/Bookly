@@ -26,8 +26,7 @@ class Pro(db.Model):
     travail_domicile = db.Column(db.Boolean, default=False)
     
     # Frais déplacement (JSON)
-    frais_deplacement = db.Column(db.JSON, comment='Paliers frais déplacement, frais en focntion d\'une distance')
-    distance_max_km = db.Column(db.Integer, default=20)
+    distance_max_km = db.Column(db.Integer, nullable = True)
     
     # Stats
     rating_avg = db.Column(db.Numeric(3, 2), default=0.00)
@@ -59,7 +58,6 @@ class Pro(db.Model):
             'longitude': float(self.longitude) if self.longitude else None,
             'travail_salon': self.travail_salon,
             'travail_domicile': self.travail_domicile,
-            'frais_deplacement': self.frais_deplacement,
             'distance_max_km': self.distance_max_km,
             'rating_avg': float(self.rating_avg) if self.rating_avg else 0,
             'total_reviews': self.total_reviews,

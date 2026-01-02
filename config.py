@@ -12,17 +12,18 @@ class Config:
     # Base de donnee
     DB_HOST = os.getenv('DB_HOST', 'localhost')
     DB_PORT = os.getenv('DB_PORT', '3306')
-    DB_NAME = os.getenv('DB_NAME', 'bookly')
+    DB_NAME = os.getenv('DB_NAME', 'aster')
     DB_USER = os.getenv('DB_USER', 'root')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', 'mysql')
 
     #chaine de connexion
     SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     #configuration JWT (token pour chaque requete, anti bot)
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-change-in-production')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'lhVT9qmWdEhZ0pH6pFLUiQ7rdhdyDmnACmV9iX27X9QiNPjTeNM65wt1wVlmxfWpeQSLKx0CSoma8UGDaQyVbw')
     JWT_ACCESS_TOKEN_EXPIRES = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 3600))
+    JWT_REFRESH_TOKEN_EXPIRES = int(os.getenv('JWT_REFRESH_TOKEN_EXPIRES', 2592000))
 
     # CORS restriction sur l'appel de mon API
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:8080').split(',')
@@ -36,6 +37,9 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
 
+    #variable de calcul du prix de deplacement pour serviec a domicile
+    TARIF_DEPLACEMENT_PAR_KM = 1.50 
+
 class DevelopmentConfig(Config):
     #Configuration en mode developement
     DEBUG = True
@@ -46,17 +50,10 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False 
 
-class TestingConfig(Config):
-    #Configuration tests
-    DEBUG = True
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URI', 'sqlite:///:memory:')
-
 #Dictionnaire de configuration
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
-    'testing': TestingConfig,
     'default': DevelopmentConfig
 }
 
