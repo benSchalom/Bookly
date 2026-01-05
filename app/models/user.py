@@ -57,6 +57,7 @@ class User (db.Model):
             'photo_url': self.photo_url,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'is_active': self.is_active,
+            'last_login': self.last_login if self.last_login else None,
             'email_verified': self.email_verified
         }
     
